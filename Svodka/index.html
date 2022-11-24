@@ -75,7 +75,7 @@
 
         $('.datepicker').datepicker(options);
         let callback = dataReturned => dataDate = dataReturned
-        //run(callback, "getData", null)
+        //run(callback, "getData", 1)
         setTimeout(run, 1000, callback, "getData", null)
     });
 

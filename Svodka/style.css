@@ -1,0 +1,190 @@
+
+  * {
+    font-family: 'Roboto', 'Popins';
+  }
+
+  table.AStable>tbody>tr:hover {
+    background: #B00020;
+    color: white;
+  }
+
+  table.AStable thead tr {
+    background: #8a8888;
+  }
+
+  table.AStable {
+    width: 100%;
+    border: 1px solid;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    cursor: default;
+  }
+
+  table.AStable th,
+  table.AStable td {
+    border: 1px solid;
+    text-align: center;
+    width: 20%;
+    padding: 1px;
+  }
+
+  .anim {
+    color: #41d1ac;
+    animation: AnimationName 2s ease-in-out infinite;
+  }
+
+  @keyframes AnimationName {
+    0% {
+      color: #000000;
+    }
+
+    100% {
+      color: #e91515;
+    }
+  }
+
+  .text-focus-in {
+    -webkit-animation: text-focus-in 2s cubic-bezier(0.250, 0.460, 0.450, 0.940) infinite both;
+    animation: text-focus-in 2s cubic-bezier(0.250, 0.460, 0.450, 0.940) infinite both;
+  }
+
+  .datepicker-date-display {
+    /*  flex: 18.8rem; */
+    width: 240px;
+  }
+
+  .datepicker {
+    cursor: pointer;
+  }
+
+  .modal-overlay {
+    background: #fff !important;
+  }
+
+  td.has-event {
+    color: #ffffff;
+    background: #8f2c67;
+  }
+
+  .input-field>label {
+    cursor: pointer !important;
+  }
+
+  .input-field {
+    position: relative;
+    width: 95%;
+    margin: 1.4rem 2.5% !important;
+  }
+
+  .ramka-5 {
+    position: absolute;
+    top: 0px;
+    z-index: 0;
+    width: 100%;
+    height: 80px;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .ramka-5::before {
+    content: "";
+    position: absolute;
+    z-index: -2;
+    left: -50%;
+    top: -50%;
+    width: 200%;
+    height: 200%;
+    background-color: #bfe2ff;
+    background-repeat: no-repeat;
+    background-size: 50% 50%, 50% 50%;
+    background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+    background-image: linear-gradient(#bfe2ff, #bfe2ff), linear-gradient(#337ab7, #337ab7), linear-gradient(#bfe2ff, #bfe2ff), linear-gradient(#337ab7, #337ab7);
+    animation: anim-ramka-5 4s linear infinite;
+  }
+
+  .ramka-5::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: 6px;
+    top: 6px;
+    width: calc(100% - 12px);
+    height: calc(100% - 12px);
+    background: white;
+    border-radius: 5px;
+  }
+
+  @keyframes anim-ramka-5 {
+    0% {
+      transform: translate(-25%, -25%);
+    }
+
+    25% {
+      transform: translate(25%, -25%);
+    }
+
+    50% {
+      transform: translate(25%, 25%);
+    }
+
+    75% {
+      transform: translate(-25%, 25%);
+    }
+
+    100% {
+      transform: translate(-25%, -25%);
+    }
+  }
+
+
+  @-webkit-keyframes text-focus-in {
+    0% {
+      -webkit-filter: blur(12px);
+      filter: blur(12px);
+      opacity: 0;
+    }
+
+    30% {
+      -webkit-filter: blur(0px);
+      filter: blur(0px);
+      opacity: 1;
+    }
+
+    50% {
+      -webkit-filter: blur(0px);
+      filter: blur(0px);
+      opacity: 1;
+    }
+
+    100% {
+      -webkit-filter: blur(12px);
+      filter: blur(12px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes text-focus-in {
+    0% {
+      -webkit-filter: blur(12px);
+      filter: blur(12px);
+      opacity: 0;
+    }
+
+    30% {
+      -webkit-filter: blur(0px);
+      filter: blur(0px);
+      opacity: 1;
+    }
+
+    50% {
+      -webkit-filter: blur(0px);
+      filter: blur(0px);
+      opacity: 1;
+    }
+
+    100% {
+      -webkit-filter: blur(12px);
+      filter: blur(12px);
+      opacity: 0;
+    }
+  }

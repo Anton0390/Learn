@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <!-- <?!= HtmlService.createHtmlOutputFromFile('HTML/DailyInfo_CSS').getContent(); ?> -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://gitcdn.link/cdn/Anton0390/JSHTML/main/Lib%20CSS.css" integrity=""
+        crossorigin="anonymous">
+
+
+    <script src="https://Anton0390.github.io/tableCreate.js"></script>
+    <!-- https://gitcdn.xyz/cdn/Anton0390/JSHTML/v.1.1/Lib.js -->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+
+</head>
+
+
+<body>
+
+    <div id="ramka" class="ramka-5"></div>
+    <div id="main" class="input-field">
+        <input type="text" class="datepicker" id="date">
+        <label for="date" class="">Выбери дату...</label>
+    </div>
+    <span></span>
+
+</body>
+<!-- <script src="./GSFun.js"></script> -->
+<script>
+    console.log('start')
+
+    let dataDate;
+    let dataTable;
+    let dateSelected = {}
+    let google = {}
+    // ,dateInp
+    let main = document.getElementById('main')
+    let body = document.getElementsByTagName('body')//[0];
+    let dateInp = document.getElementById('date')
+    let span = document.getElementsByTagName('span')[0];
+
+
+    $(document).ready(function () {
+
+        ramka.style.display = 'none'
+
+        let options = {
+            format: 'dd-mm-yyyy',
+            events: [],
+            showClearBtn: true,
+            onSelect() {
+                if (options.events.includes(this.date.toDateString())) {
+                };
+                let inpDate = this.date.toLocaleDateString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric' }).split('.')
+                dateSelected.d = inpDate[0]
+                dateSelected.m = inpDate[1]
+                dateSelected.y = inpDate[2].replace('20', '')
+            },
+            onClose() {
+                drawTable()
+            }
+        }
+
+        $('.datepicker').datepicker(options);
+        let callback = dataReturned => dataDate = dataReturned
+        //run(callback, "getData", null)
+        setTimeout(run, 1000, callback, "getData", null)
+    });
+
+    let run = function (callback, script, par) {
+        if (google.script) {
+            return google.script.run.withSuccessHandler(callback)[script]()
+        } else {
+            //console.log('run')
+            callback(GSFun[script].call(null, par))
+        }
+
+    }
+
+    /* $('#date').click(function () {
+        google.script.host.setHeight(490);
+    }) */
+
+    function drawTable() {
+
+        if (!dataDate) throw new Error('Не получен массив dataDate из getData()')
+        let filtred = dataDate.filter(a => a && getDate(a) && getDate(a).d == dateSelected.d && getDate(a).m == dateSelected.m && getDate(a).y == dateSelected.y)
+
+        let tableRM = document.getElementById('rm')
+        let tablePR = document.getElementById('prdct')
+
+        if (filtred.length === 0) {
+            if (tableRM) tableRM.style.display = 'none'
+            if (tablePR) tablePR.style.display = 'none'
+
+            span.innerText = `Нет данных о плавках в эту дату`
+
+            google.script.host.setHeight(document.body.scrollHeight + 30);
+
+        } else {
+
+            ramka.style.display = ''
+            //span.classList.add('text-focus-in')
+            //span.innerText = `Загрузка данных ...`
+            span.innerText = ``
+
+            if (tableRM) tableRM.style.display = 'none'
+            if (tablePR) tablePR.style.display = 'none'
+            dateInp.setAttribute('disabled', '')
+
+            let inputCalDate = filtred.map(a => /^\d{4}/g.exec(a)[0])
+
+            let callback = function (dataReturned) {
+
+                let [head, ...rest] = dataReturned.rawMat
+                let chosen = head[1]
+
+                ramka.style.display = 'none'
+                //span.classList.remove('text-focus-in')
+                span.innerText = chosen.length > 4 ? `Плавки № ${chosen}` : `Плавка № ${chosen}`
+
+                head = ['Тип сырья', 'Масса W, кг']
+
+                tableCreate(head, rest, 'rm', body)
+                tableCreate(['1сорт', '2сорт+Ликв', 'Отсев', 'Шлак', 'Пыль'], dataReturned.products, 'prdct', body)
+
+                dateInp.removeAttribute('disabled')
+
+                //google.script.host.setHeight(document.body.scrollHeight + 30);
+
+            }
+
+            //run(callback, 'dataDaily', inputCalDate)
+
+            setTimeout(run, 1000, callback, "dataDaily", inputCalDate)
+
+            /* google.script.run.withSuccessHandler(function (dataReturned) {
+                let [head, ...rest] = dataReturned.rawMat
+                let chosen = head[1]
+
+                ramka.style.display = 'none'
+                //span.classList.remove('text-focus-in')
+                span.innerText = chosen.length > 4 ? `Плавки № ${chosen}` : `Плавка № ${chosen}`
+
+                head = ['Тип сырья', 'Масса W, кг']
+
+                tableCreate(head, rest, 'rm', body)
+                tableCreate(['1сорт', '2сорт+Ликв', 'Отсев', 'Шлак', 'Пыль'], dataReturned.products, 'prdct', body)
+
+                dateInp.removeAttribute('disabled')
+
+                //google.script.host.setHeight(document.body.scrollHeight + 30);
+
+            }).dataDaily(inputCalDate) */
+        }
+
+    }
+
+    function getDate(str) {
+
+        const dateReg = /\d{1,2}.\d{1,2}.\d{2,4}/i
+        let date = {}
+        if (/^\d{4}\//i.exec(str) && dateReg.exec(str)) {
+            let dateStr = dateReg.exec(str.toString().replace(/^\d{4}\//i, '&').replace(/[/,\s]/i, '.'))[0]
+            date.d = +/^(\d+)[\.\/]/g.exec(dateStr)[1]
+            date.m = +/[\.\/](\d+)[\.\/]/g.exec(dateStr)[1]
+            date.y = +/[\.\/](\d+)$/g.exec(dateStr)[1].replace('20', '')
+            return date
+        } else return
+    }
+
+    /* function getInpDate() {
+
+        let dateInp = document.getElementById('date')
+
+        date.y = +dateInp.valueAsDate.getFullYear().toString().replace('20', '')
+        date.m = dateInp.valueAsDate.getMonth() + 1
+        date.d = dateInp.valueAsDate.getUTCDate()
+
+        if (!dataDate) throw new Error('Не получен массив dataDate из getData()')
+        let filtred = dataDate.filter(a => a && getDate(a) && getDate(a).d === date.d && getDate(a).m === date.m && getDate(a).y === date.y)
+
+        let span = document.getElementsByTagName('span')[0];
+        let tableRM = document.getElementById('rm')
+        let tablePR = document.getElementById('prdct')
+
+        if (filtred.length === 0) {
+
+            if (tableRM) tableRM.style.display = 'none'
+            if (tablePR) tablePR.style.display = 'none'
+
+            span.innerText = `Нет данных о плавках в эту дату`
+
+        } else {
+
+            span.classList.add('text-focus-in')
+            span.innerText = `Загрузка данных ...`
+
+            if (tableRM) tableRM.style.display = 'none'
+            if (tablePR) tablePR.style.display = 'none'
+            dateInp.setAttribute('disabled', '')
+
+            let inputCalDate = filtred.map(a => /^\d{4}/g.exec(a)[0])
+
+            google.script.run.withSuccessHandler(
+                function (dataReturned) {
+
+                    let [head, ...rest] = dataReturned.rawMat
+                    let chosen = head[1]
+
+                    span.classList.remove('text-focus-in')
+                    span.innerText = chosen.length > 4 ? `Плавки № ${chosen} ` : `Плавка № ${chosen} плавилась`
+
+                    head = ['Тип сырья', 'Масса W, кг']
+
+                    tableCreate(head, rest, 'rm', body)
+                    tableCreate(['1сорт', '2сорт+Ликв', 'Отсев', 'Шлак', 'Пыль'], dataReturned.products, 'prdct', body)
+
+                    dateInp.removeAttribute('disabled')
+
+                }).dataDaily(inputCalDate)
+        }
+    }
+ */
+
+    class Table {
+        #thead;
+        #tbody;
+        #parent
+        #tableId
+
+        constructor(parent, tableId) {
+            this.#parent = parent ?? document.getElementsByTagName('body')
+            this.#tableId = tableId ?? 'tableId'
+            this.#thead = []
+            this.#tbody = [[]]
+        }
+        setThead(params) {
+            this.#thead = params
+        }
+
+        setTbody(params) {
+            this.#tbody = params
+        }
+        setTableId(params) {
+            this.#tableId = params
+        }
+        setParent(params) {
+            this.#parent = params
+        }
+
+        log(val) {
+            console.log(this[val])
+        }
+
+        #build() {
+            let tbl = document.createElement("table");
+            tbl.setAttribute("id", this.#tableId.toString());
+            tbl.setAttribute("class", 'AStable');
+
+            let tbdy = document.createElement("tbody");
+            let tbhd = document.createElement("thead");
+            let tr = document.createElement("tr");
+
+            //header
+
+            this.#thead.forEach((cell) => {
+                let th = document.createElement("th");
+                th.appendChild(document.createTextNode(cell));
+                tr.appendChild(th);
+                tbhd.appendChild(tr);
+            });
+            tbl.appendChild(tbhd);
+
+            //tbody
+
+            this.#tbody.forEach((row) => {
+                let tr = document.createElement("tr");
+                row.forEach((cell) => {
+                    let td = document.createElement("td");
+                    td.appendChild(document.createTextNode(cell));
+                    tr.appendChild(td);
+                });
+                tbdy.appendChild(tr);
+            });
+            tbl.appendChild(tbdy);
+            return tbl
+        }
+
+        render() {
+            let tablePos;
+            let tbl = this.#build()
+            let parent = this.#parent
+            Array.prototype.slice.call(parent[0].childNodes).forEach((el, i) => {
+                if (el.id == this.#tableId) tablePos = i;
+            });
+            tablePos
+                ?
+                parent[0].replaceChild(tbl, parent[0].childNodes[tablePos]) :
+                parent[0].appendChild(tbl);
+        }
+    }
+    let tab = new Table()
+    tab.setThead([10, 20, 30, 40])
+    tab.setTbody([[1, 2, 3, 4], [4, 345, 345, 5]])
+    /* function tableCreate(thead, tbody, tableId, parent) {
+             if (!parent) parent = document.getElementsByTagName('body')
+             if (!tableId) tableId = 'tableId'
+             if (!tbody) tbody = [
+                 []
+             ]
+             let tbl = document.createElement("table");
+             tbl.setAttribute("id", tableId.toString());
+             tbl.setAttribute("class", 'AStable');
+     
+             let tbdy = document.createElement("tbody");
+             let tbhd = document.createElement("thead");
+             let tr = document.createElement("tr");
+     
+             //header
+     
+             thead.forEach((cell) => {
+                 let th = document.createElement("th");
+                 th.appendChild(document.createTextNode(cell));
+                 tr.appendChild(th);
+                 tbhd.appendChild(tr);
+             });
+             tbl.appendChild(tbhd);
+     
+             //tbody
+     
+             tbody.forEach((row) => {
+                 let tr = document.createElement("tr");
+                 row.forEach((cell) => {
+                     let td = document.createElement("td");
+                     td.appendChild(document.createTextNode(cell));
+                     tr.appendChild(td);
+                 });
+                 tbdy.appendChild(tr);
+             });
+             tbl.appendChild(tbdy);
+     
+             let tablePos;
+             Array.prototype.slice.call(parent[0].childNodes).forEach((el, i) => {
+                 if (el.id == tableId) tablePos = i;
+             });
+             tablePos
+                 ?
+                 parent[0].replaceChild(tbl, parent[0].childNodes[tablePos]) :
+                 parent[0].appendChild(tbl);
+         } */
+
+
+    ////////////////////////////////
+
+    let GSFun = {
+        getData: function () {
+
+            let data = [
+                ["1543/28.11.22ИШ(Наль)+WO3+отсев+ликвация+шлак"],
+                ["1544/29.11.22ИШ(Наль)+WO3+отсев+ликвация+шлак"]]
+            return data
+            //throw new Error('не работает GetData')
+        },
+
+        dataDaily: function (inputChargeName) {
+            //let source = SpreadsheetApp.getActive();
+            let outOBj = {};
+            //console.log(inputChargeName)
+            if (!inputChargeName || inputChargeName.join().length < 4) return;
+            let sumData = [];
+
+            inputChargeName.forEach((charge, ind) => {
+                //if (!source.getSheetByName(charge)) return;
+                //let data = source.getSheetByName(charge).getDataRange().getValues();
+                let data = dataFromSheet[charge];
+
+                const perepl = ["2 сорт (2022)", "Отсевы (2022)", "Ликвация (2022)"];
+                let pereplInds = [];
+
+                data.forEach((r, i) => {
+
+                    if (perepl.includes(r[0])) pereplInds.push(i);
+                });
+
+                let data1 = data.map((row, ind) => {
+                    let [name, ...rest] = row;
+                    let pereplname =
+                        ind > pereplInds[0] && ind < pereplInds[1]
+                            ? "2_сорт+Ликв"
+                            : ind > pereplInds[1] && ind < pereplInds[2]
+                                ? perepl[1]
+                                : "2_сорт+Ликв";
+                    return [name.toString().replace(/\d{4}/i, pereplname), ...rest];
+                });
+
+                const ignorelist = ["Термичность, кДж", "Итого, кг", "АПВ", "Лом_алюминия"];
+                data1.map((row) => {
+                    if (row[2] > 0 && !ignorelist.includes(row[0])) {
+                        sumData.push([
+                            row[0].toString().split(" ")[0],
+                            row[2] * ((100 - row[8] - row[9]) / 100) * (row[11] / 100),
+                        ]);
+                    }
+                });
+            });
+
+            let out = [["#", inputChargeName.join(", ")]];
+
+            sumData.map((row) => {
+                let uniqPos = sumData.filter((rowU) => rowU[0] === row[0]);
+                let mass = uniqPos.reduce((acc, val) => (acc += val[1]), 0);
+
+                if (mass > 0 && !out.map((i) => i[0]).includes(row[0]))
+                    out.push([row[0], round(mass, 0)]);
+            });
+            outOBj.rawMat = out;
+            outOBj.products = getMeltProdData(inputChargeName);
+            data11 = []
+            return outOBj;
+        },
+    }
+
+    /*   function getData() {
+          const fewTableId = "1NCKVDzLoHN3MtVaL_XK2WVUCwY0hWIonlkwKuMqtYQY";
+          return batchGet(["'1 сорт (2022)'!A3:A"], fewTableId, "unformat")[0].values;         
+      } */
+
+    function modalDataDaily() {
+        const ui = SpreadsheetApp.getUi();
+        let htmlOutput = HtmlService.createTemplateFromFile("HTML/DailyInfo")
+            .evaluate()
+            .setHeight(460)
+            .setWidth(700);
+        ui.showModelessDialog(htmlOutput, "Сводка проведенных плавок");
+    }
+
+    /* function dataDaily(inputChargeName) {
+        let source = SpreadsheetApp.getActive();
+        let outOBj = {};
+        //console.log(inputChargeName)
+        if (!inputChargeName || inputChargeName.join().length < 4) return;
+        let sumData = [];
+
+        inputChargeName.forEach((charge, ind) => {
+            if (!source.getSheetByName(charge)) return;
+            let data = source.getSheetByName(charge).getDataRange().getValues();
+
+            const perepl = ["2 сорт (2022)", "Отсевы (2022)", "Ликвация (2022)"];
+            let pereplInds = [];
+
+            data.forEach((r, i) => {
+                if (perepl.includes(r[0])) pereplInds.push(i);
+            });
+
+            let data1 = data.map((row, ind) => {
+                let [name, ...rest] = row;
+                let pereplname =
+                    ind > pereplInds[0] && ind < pereplInds[1]
+                        ? "2_сорт+Ликв"
+                        : ind > pereplInds[1] && ind < pereplInds[2]
+                            ? perepl[1]
+                            : "2_сорт+Ликв";
+                return [name.toString().replace(/\d{4}/i, pereplname), ...rest];
+            });
+
+            const ignorelist = ["Термичность, кДж", "Итого, кг", "АПВ", "Лом_алюминия"];
+            data1.map((row) => {
+                if (row[2] > 0 && !ignorelist.includes(row[0])) {
+                    sumData.push([
+                        row[0].toString().split(" ")[0],
+                        row[2] * ((100 - row[8] - row[9]) / 100) * (row[11] / 100),
+                    ]);
+                }
+            });
+        });
+
+        let out = [["#", inputChargeName.join(", ")]];
+
+        sumData.map((row) => {
+            let uniqPos = sumData.filter((rowU) => rowU[0] === row[0]);
+            let mass = uniqPos.reduce((acc, val) => (acc += val[1]), 0);
+
+            if (mass > 0 && !out.map((i) => i[0]).includes(row[0]))
+                out.push([row[0], round(mass, 0)]);
+        });
+        outOBj.rawMat = out;
+        outOBj.products = getMeltProdData(inputChargeName);
+        return outOBj;
+    }
+ */
+
+    function getMeltProdData(inputChargeName) {
+        const spreadsheet_id = "1igmqYr2zjVFXEf9f76-vAsxBXgyHKhgdVgBT8THOtKI"; // Цех2.ФВ
+
+        let data = data3/* SpreadsheetApp.openById(spreadsheet_id)
+            .getDataRange()
+            .getValues() */
+            .reduce((acc, v) => {
+                if (inputChargeName.includes(v[1].toString()))
+                    acc.push([+v[5], +v[6] + +v[9], +v[7], +v[8], +v[10]]);
+                return acc;
+            }, []);
+        if (data.length === 0) return;
+
+        let out = [];
+        //console.log(data);
+        data[0].forEach((a, i) => {
+            out.push(
+                round(
+                    data.reduce((acc, v) => (acc += v[i]), 0),
+                    0
+                )
+            );
+        });
+        return [out];
+    }
+    ///////////////////////////////////
+
+    data1 = [["Масса слитка, кг", 1406.8075089875629, "Восст.", "Изб.", "Доля", "Банки", "", "", "Учет ППП", 1, "Шлак", "", "", "", "", "", "ФВ70 (1 класс)-ГОСТ", "", "", "", "", "#REF!", "", "", "", "", "", "", "SUM(IFERROR(ArrayFormula($L$27:$AC$27*HLOOKUP($L$5:$AC$5;'Коэфф'!$C$1:$V$10;MATCH(\"Al_T\";'Коэфф'!$B$1:$B;0);0));\"\");(VLOOKUP(\"Селитра\";$A:$C;3;0)*8037)*1)/($D$6+$E$6 ) "], ["Итого вес шихты, кг", 3073.9676625066513, "Al", 1.05, 100, 1, "", "", "", "", "", "SiO2", "CaO", "Al2O3", "Итого", "", "Сырье (ПИ)", "", "", "", "", "", "", "", "", "", "", "", ""], ["Вес шлака, кг", 1667.1601535190885, "Si", 0.95, 0, 1, "", "", "", "", "кг", 116.62343389775529, 387.58461548101116, 865.3482517270878, 1667.1601535190885, "", "К переходов (копия)", "", "", "", "", "", "", "", "", "", "", "", ""], ["Термичность, кДж", "", 2059.4917852486597, 2059.4917852486597, "", "", "", "", "", "", "%", 6.995334770422822, 23.248193322212426, 51.90552628675094, 100, "", "", "", "", "", "", "", "", "", "", "", "", "", ""], [1543, "Остаток", "Расчет", "Шихта", "Шихта1", "РС", "ПП", "Шлак", "%H2O", "ППП", "%WO3", "W", "Fe", "S", "P", "Si", "Cu", "As", "Sn", "Sb", "Pb", "Al", "Mn", "Mo", "Bi", "Co", "Ca", "C", "Ni"], ["Итого, кг", "", 3073.9676625066513, 2443.9676625066513, 0, 40, 590, 0, "", "", "", 987.2349281602507, 369.6368903913172, 0.2676975539003725, 0.9172493175039905, 10.523474234658115, 1.1291642912639674, 0.048786044, 0.06420042000000001, 0.00249045, 0.0020284500000000002, 4.5785621784502, 1.0720373699673487, 27.561416119999997, "", 0.91394624, "", "", 2.8546377662506655], ["% слиток", "", ".", ".", "", "", "", "", "", "", "", 70.17555151313728, 26.27487328791227, 0.01902872654504285, 0.06520076923417244, 0.7480393847365475, 0.08026430652737936, 0.003467854961558305, 0.004563553975213221, 0.00017702848357642773, 0.00014418816981292735, 0.32545761585714406, 0.07620355756693833, 1.9591462189333295, "", 0.06496597680643172, "", "", 0.202916017153268], ["% слиток факт", "", ".", ".", "", "", "", "", "", "", "", 73.105, " ", 0.018, 0.056, 1.021, 0.095, 0.039, 0.031, 0.018, 0.005, 0.585, 0.118, 2.48, " ", 0.136, " ", 0.032, 0.126], ["Итого Э из ПП, кг", "", ".", ".", "", "", "", "", "", "", "", 129.23203676625067, 236.65697339131717, 0.16388706500266045, 0.6250276625066511, 14.752485482581143, 1.0851920912639674, 0.25988, 0.11032, 0.0174, 0.01194, 362.72919544502, 3.716238066303875, 4.4605, 0, 0.02209, 126.14756119500798, 0.005, 0.04029676625066512], ["Оксиды", "", ".", ".", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Окалина", "", 140, 140, "", "", "", "", "", "", "", "", 69.7, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Сырье", "", 0, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["WO3 Техн. п№ К -2248", 512, 880, 840, "", "", 40, "", "", 1.7, 88.521, 70.197153, 1.3725, 0.0148, 0.003, 0.2407, "", 0.0076, 0.01, "", "", 0.306, "", 0.1913, "", 0.1031, 0.1203, 0.086, 0.226], ["ИШ п№ 110 -22 м№ 128", 0, 207, 207, "", "", "", "", "", 6, 61.162, 48.501466, 0.735, 0.178, 0.15, 0.274, 0.009, 0.003, 0.003, 0.005, 0.005, "", 0.008, 4.137, 0.091, "", 15.512, "", 0.057], ["ИШ п№ 115 -22 м№ 128", 147, 400, 400, "", "", "", "", "", 5.5, 47.851, 37.945843, 1.486, 0.337, 0.155, 1.379, 0.007, 0.007, 0.003, 0.006, 0.005, "", 0.015, 3.544, 0.11, "", 16.115, "", 0.198], ["Шлак п№ 1504", 0, 400, "", "", "", 400, "", "", "", 4.085750315258512, 3.24, 4.12, "", "", 10.61, "", "", "", "", "", 23.12, 0.86, "", "", "", 14.64, "", ""], ["Итого, кг Э в ЭО в Шихта", "", ".", ".", "", "", "", "", "", "", "", 858.002891394, 132.97991700000003, 1.74823832, 0.9037211999999999, 50.26792048, 0.0439722, 0.09804044000000002, 0.1036814, 0.032409, 0.028629, 95.1270224, 3.5122664, 23.100916119999997, 0.5928678000000001, 0.8918562400000001, 150.69859272, 0.7439344000000001, 2.814341], ["Итого, кг Э в ЭО в Шихта1", "", ".", ".", "", "", "", "", "", "", "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], ["Итого, кг ЭО", "", ".", ".", "", "", "", "", "", "", "        ", 1081.941646047834, 171.07866322050003, 0, 0, 107.5733498272, 0, 0, 0.1312606524, 0, 0, 179.79007233599998, 4.530823656, 34.65137418, 0, 1.13354928104, 210.97802980799997, 0, 0], ["Переплавные", "", ".", ".", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["2 сорт (2022)", "", 0, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Отсевы (2022)", "", 0, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], [1538, "", 94, 94, "", "", "", "", "", "", "", 68.871, "", 0.005, 0.049, 7.612, 0.084, 0.052, 0.028, 0.01, 0.001, 1.757, 0.33, 1.975, "", 0.0235, "", "", ""], ["Ликвация (2022)", "", 0, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], [1540, "", 100, "", "", "", 100, "", "", "", "", 64.455, "", 0.01, 0.206, 3.007, 0.203, 0.211, 0.084, 0.008, 0.01, 0.171, 0.345, 2.604, "", "", "", "", ""], ["Вспомогательные", "", 0, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Стружка_стальная", "", 240, 240, "", "", "", "", "", "", "", "", 97, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Известь", "", 150, 150, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 71, "", ""], ["АПВ", "", 10, 0, 0, "", 10, "", "", "", "", 0.01, 0.9, "", "", 0.4, 0.2, "", "", "", 0.01, 93.1, 0.4, "", "", "", "", 0.05, 0.03], ["Лом_алюминия", "", 372.96766250665115, 332.96766250665115, 0, 40, "", "", "", "", "", 0.01, 1.01, 0.04, 0.1, 1.22, 0.21, "", "", "", "", 94.27, 0.81, "", "", "", 0.12, "", 0.01], ["Окалина рафинир.", "", 40, "", "", "", 40, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Шпат", "", 40, 40, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 48, "", ""]]
+    data2 = [["Масса слитка, кг", 1409.3605981728615, "Восст.", "Изб.", "Доля", "Банки", "", "", "Учет ППП", 1, "Шлак", "", "", "", "", "", "ФВ70 (1 класс)-ГОСТ", "", "", "", "", "#REF!", "", "", "", "", "", "", "SUM(IFERROR(ArrayFormula($L$27:$AC$27*HLOOKUP($L$5:$AC$5;'Коэфф'!$C$1:$V$10;MATCH(\"Al_T\";'Коэфф'!$B$1:$B;0);0));\"\");(VLOOKUP(\"Селитра\";$A:$C;3;0)*8037)*1)/($D$6+$E$6 ) "], ["Итого вес шихты, кг", 3219.8519327632753, "Al", 1.05, 100, 1, "", "", "", "", "", "SiO2", "CaO", "Al2O3", "Итого", "", "Сырье (ПИ)", "", "", "", "", "", "", "", "", "", "", "", ""], ["Вес шлака, кг", 1810.4913345904138, "Si", 0.95, 0, 1, "", "", "", "", "кг", 141.28961913911422, 414.3433632859022, 1001.5125774832829, 1810.4913345904138, "", "К переходов (копия)", "", "", "", "", "", "", "", "", "", "", "", ""], ["Термичность, кДж", "", 2195.041976229404, 2195.041976229404, "", "", "", "", "", "", "%", 7.803937883584407, 22.885686077013943, 55.31717044698557, 100, "", "", "", "", "", "", "", "", "", "", "", "", "", ""], [1544, "Остаток", "Расчет", "Шихта", "Шихта1", "РС", "ПП", "Шлак", "%H2O", "ППП", "%WO3", "W", "Fe", "S", "P", "Si", "Cu", "As", "Sn", "Sb", "Pb", "Al", "Mn", "Mo", "Bi", "Co", "Ca", "C", "Ni"], ["Итого, кг", "", 3219.8519327632753, 2479.8519327632753, 0, 40, 700, 0, "", "", "", 996.4814689498763, 362.1483575703091, 0.3040679348147434, 0.9015004510579651, 13.392934251307196, 0.946073108802878, 0.01333035862, 0.02514041634, 0.001951245, 0.0017560375, 5.299008346472396, 1.4050049314844277, 26.2366516841, "", 0.5209211894, "", "", 1.6824316977763278], ["% слиток", "", ".", ".", "", "", "", "", "", "", "", 70.70450743704241, 25.695933179897988, 0.021574885462879157, 0.06396520892003778, 0.9502844246298788, 0.06712782449214177, 0.0009458444231576991, 0.001783817170182905, 0.00013844895355593552, 0.00012459816900490769, 0.37598669590608635, 0.09969094732078641, 1.8615996302233795, "", 0.03696152638830249, "", "", 0.11937553100019144], ["% слиток требования", "", ".", ".", "", "", "", "", "", "", "", 70, " ", 0.1, 0.06, 0.8, 0.2, 0.05, " ", " ", " ", " ", 0.5, 2, " ", " ", " ", 0.5, " "], ["Итого Э из ПП, кг", "", ".", ".", "", "", "", "", "", "", "", 54.84758519327632, 227.2487045209091, 0.2039407731053101, 0.4298519327632753, 11.274593579711958, 0.915889058802878, 0.0392, 0.0184, 0, 0.0026, 389.6350170159396, 3.4390006553825305, 1.816, 0, 0, 97.78222231931592, 0.005, 0.043185193276327534], ["Оксиды", "", ".", ".", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Окалина", "", 140, 140, "", "", "", "", "", "", "", "", 69.7, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Сырье", "", 0, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["WO3 Техн. п№ К -2248", 0, 512, 472, "", "", 40, "", "", 1.7, 88.521, 70.197153, 1.3725, 0.0148, 0.003, 0.2407, "", 0.0076, 0.01, "", "", 0.306, "", 0.1913, "", 0.1031, 0.1203, 0.086, 0.226], ["ИШ п№ 113 -22 м№ 128", 482, 550, 550, "", "", "", "", "", 7, 61.663, 48.898759, 0.693, 0.278, 0.164, 0.259, 0.004, 0.004, 0.002, 0.006, 0.005, "", 0.007, 3.594, 0.104, "", 17.075, "", 0.044], ["ИШ п№ 115 -22 м№ 128", 0, 147, 147, "", "", "", "", "", 5.5, 47.851, 37.945843, 1.486, 0.337, 0.155, 1.379, 0.007, 0.007, 0.003, 0.006, 0.005, "", 0.015, 3.544, 0.11, "", 16.115, "", 0.198], ["Шлак п№ 1504", 200, 600, "", "", "", 600, "", "", "", 4.085750315258512, 3.24, 4.12, "", "", 10.61, "", "", "", "", "", 23.12, 0.86, "", "", "", 14.64, "", ""], ["WO3 Техн. п№ 450", 0, 349, 349, "", "", "", "", "", 3.39, 99.51, 78.91143000000001, 0.0246, 0.001, 0.001, 0.0088, "", 0.0018, 0.0002, "", "", 0.0017, "", 0.0449, "", 0.0006, 0.0021, "", 0.0005], ["Итого, кг Э в ЭО в Шихта", "", ".", ".", "", "", "", "", "", "", "", 941.6338837566, 134.8996530494, 1.967973047, 1.0726488189999999, 68.1415271852, 0.030184050000000004, 0.0745035862, 0.0654013878, 0.0390249, 0.03252075, 140.26581763130002, 5.2166422500000005, 24.4206516841, 0.6847665000000001, 0.5209211894, 198.17732288489998, 0.43283456, 1.6392465045000002], ["Итого, кг Э в ЭО в Шихта1", "", ".", ".", "", "", "", "", "", "", "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], ["Итого, кг ЭО", "", ".", ".", "", "", "", "", "", "", "        ", 1187.4003274170725, 173.5484036480531, 0, 0, 145.82286817632803, 0, 0, 0.0827981569548, 0, 0, 265.10239532315705, 6.7294685025000005, 36.630977526150005, 0, 0.6620908317273999, 277.44825203885995, 0, 0], ["Переплавные", "", ".", ".", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["2 сорт (2022)", "", 0, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Отсевы (2022)", "", 0, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], [1542, 80, 80, 80, "", "", "", "", "", "", "", 68.508, "", 0.054, 0.035, 7.915, 0.065, 0.049, 0.023, "", 0.002, 1.874, 0.18, 2.27, "", "", "", "", ""], ["Ликвация (2022)", "", 0, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Вспомогательные", "", 0, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Стружка_стальная", "", 230, 230, "", "", "", "", "", "", "", "", 97, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Известь", "", 110, 110, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 71, "", ""], ["АПВ", "", 10, 0, 0, "", 10, "", "", "", "", 0.01, 0.9, "", "", 0.4, 0.2, "", "", "", 0.01, 93.1, 0.4, "", "", "", "", 0.05, 0.03], ["Лом_алюминия", "", 401.8519327632753, 361.8519327632753, 0, 40, "", "", "", "", "", 0.01, 1.01, 0.04, 0.1, 1.22, 0.21, "", "", "", "", 94.27, 0.81, "", "", "", 0.12, "", 0.01], ["Окалина рафинир.", "", 50, "", "", "", 50, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["Шпат", "", 40, 40, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 48, "", ""]]
+
+    dataFromSheet = {
+        '1543': data1,
+        '1544': data2
+    }
+
+    data3 = [["/1537", "1537", "20.09.2022ИШ(Наль)+WO3+отсев+ликвация+шлак", 1134.6324968962135, 1105.9165799999998, 999.4941399999999, 0, 61.902950000000004, 24.1704, 44.519490000000005, "", "", "", "", "", 97.46914379988534, 88.0896803796926, 0, 5.455770936345952, 2.130240414065181, 3.9236924838468, 0, 0, 99.59938421395054, 97.46914379988536], ["/1538", "1538", "21.09.2022ИШ(Наль)+WO3+шлак", 1024.4576206769639, 989.50817, 797.3217199999999, 0, 65.42745, 10.619000000000002, 126.759, "", "", "", "", "", 96.58849229372034, 77.82866796121132, 0, 6.38654529767326, 1.0365484902130888, 12.373279034835758, 0, 0, 97.62504078393344, 96.58849229372035], ["/1539", "1539", "22.09.2022ИШ(Наль)+WO3+шлак", 1029.46651290407, 1026.75796, 869.96052, 0, 74.76664, 7.29615, 82.0308, "", "", "", "", "", 99.73689742501391, 84.50595615255982, 0, 7.262658771589112, 0.7087311640101776, 7.968282500864986, 0, 0, 100.4456285890241, 99.73689742501392], ["/1540", "1540", "23.09.22ИШ(Наль)+WO3+отсев+ликвация+шлак", 1035.3905059412123, 1049.3433, 859.08864, 0, 61.344660000000005, 11.988829999999998, 128.91, "", "", "", "", "", 101.34758759895176, 82.97242780095355, 0, 5.924784865999443, 1.157904185059304, 12.450374931998777, 0, 0, 102.50549178401108, 101.34758759895178], ["/1541", "1541", "26.09.22ИШ(Наль)+WO3+отсев+ликвация+шлак", 1053.2707159108327, 1033.5360799999999, 822.9589599999999, 0, 60.162240000000004, 21.5352, 150.41488, "", "", "", "", "", 98.12634723317386, 78.13365999531592, 0, 5.711944620806603, 2.0446025579831195, 14.280742617051338, 0, 0, 100.170949791157, 98.12634723317387], ["/1542", "1542", "27.09.22ИШ(Наль)+WO3+отсев+ликвация+шлак", 1129.2974046347733, 1064.97038, 900.7577, 0, 55.491479999999996, 17.57705, 108.72120000000001, "", "", "", "", "", 94.30380125104622, 79.76266449415196, 0, 4.913805678845646, 1.5564589033731644, 9.62733107804862, 0, 0, 95.8602601544194, 94.30380125104622], ["/1543", "1543", "28.09.22ИШ(Наль)+WO3+отсев+ликвация+шлак", 987.2349281602507, 1015.4314999999999, 731.38098, 0, 40.42252, 20.50858, 243.628, "", "", "", "", "", 102.85611570614653, 74.08378280972654, 0, 4.094518826975549, 2.0773758519887973, 24.677814069444434, 0, 0, 104.93349155813532, 102.85611570614653], ["/1544", "1544", "29.09.22ИШ(Наль)+WO3+отсев+ликвация+шлак", 996.4814689498763, 997.41333, 726.09648, 0, 91.89375, 17.645039999999998, 179.4231, "", "", "", "", "", 100.09351514093942, 72.86602938689703, 0, 9.22182226798864, 1.7707343839113134, 18.00566348605376, 0, 0, 101.86424952485075, 100.09351514093943]]
+    function round(num, places, replace) {
+        if (!places && places !== 0) places = 3
+        if (!replace) replace = '-'
+        if (isNaN(Number(num)) || num === '') return replace
+        else return +(Math.round(+num + "e+" + places) + "e-" + places);
+    }
+</script>
+
+
+</script>
+
+
+</html>

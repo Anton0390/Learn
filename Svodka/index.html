@@ -75,7 +75,6 @@
 
         $('.datepicker').datepicker(options);
         let callback = dataReturned => dataDate = dataReturned
-        //run(callback, "getData", 1)
         setTimeout(run, 1000, callback, "getData", null)
     });
 
@@ -83,15 +82,10 @@
         if (google.script) {
             return google.script.run.withSuccessHandler(callback)[script]()
         } else {
-            //console.log('run')
             callback(GSFun[script].call(null, par))
         }
 
-    }
-
-    /* $('#date').click(function () {
-        google.script.host.setHeight(490);
-    }) */
+    } 
 
     function drawTable() {
 
@@ -112,8 +106,6 @@
         } else {
 
             ramka.style.display = ''
-            //span.classList.add('text-focus-in')
-            //span.innerText = `Загрузка данных ...`
             span.innerText = ``
 
             if (tableRM) tableRM.style.display = 'none'
@@ -128,7 +120,6 @@
                 let chosen = head[1]
 
                 ramka.style.display = 'none'
-                //span.classList.remove('text-focus-in')
                 span.innerText = chosen.length > 4 ? `Плавки № ${chosen}` : `Плавка № ${chosen}`
 
                 head = ['Тип сырья', 'Масса W, кг']
@@ -137,8 +128,6 @@
                 tableCreate(['1сорт', '2сорт+Ликв', 'Отсев', 'Шлак', 'Пыль'], dataReturned.products, 'prdct', body)
 
                 dateInp.removeAttribute('disabled')
-
-                //google.script.host.setHeight(document.body.scrollHeight + 30);
 
             }
 
